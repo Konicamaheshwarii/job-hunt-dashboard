@@ -74,7 +74,7 @@
   @if (ghosts().length) {
     <ul>
       @for (g of ghosts(); track g.app.id) {
-        <li><a [routerLink]="['/app', g.app.id]">{{ g.app.company }}</a> <span class="muted">· {{ statusLabel(g.app.status) }} · {{ g.quietDays }} days without news</span></li>
+        <li><a [routerLink]="['/app', g.app.id]">{{ g.app.company }}</a><span class="muted">&nbsp;· {{ statusLabel(g.app.status) }} · {{ g.quietDays }} days without news</span></li>
       }
     </ul>
   } @else {

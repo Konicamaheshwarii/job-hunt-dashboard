@@ -15,7 +15,7 @@
       Link to an application (optional)
       <select [value]="job().appId" (change)="pickApp($any($event.target).value)">
         <option value="">None</option>
-        @for (a of apps.all(); track a.id) { <option [value]="a.id">{{ a.company }} · {{ a.role }}</option> }
+        @for (a of apps.all(); track a.id) { <option [value]="a.id" [selected]="a.id === job().appId">{{ a.company }} · {{ a.role }}</option> }
       </select>
     </label>
     <label>

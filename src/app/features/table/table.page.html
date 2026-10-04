@@ -10,14 +10,14 @@
     <select [value]="status()" (change)="status.set($any($event.target).value)">
       <option value="all">All stages</option>
       <option value="active">Active (applied → offer)</option>
-      @for (s of statuses; track s.id) { <option [value]="s.id">{{ s.label }}</option> }
+      @for (s of statuses; track s.id) { <option [value]="s.id" [selected]="s.id === status()">{{ s.label }}</option> }
     </select>
   </label>
   <label>
     Source
     <select [value]="source()" (change)="source.set($any($event.target).value)">
       <option value="all">All sources</option>
-      @for (s of sources(); track s) { <option [value]="s">{{ s }}</option> }
+      @for (s of sources(); track s) { <option [value]="s" [selected]="s === source()">{{ s }}</option> }
     </select>
   </label>
   <label>

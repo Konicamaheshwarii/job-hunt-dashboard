@@ -41,7 +41,7 @@
               <label class="move">
                 <span class="sr-only">Move {{ app.company }} to</span>
                 <select [value]="app.status" (change)="moveTo(app.id, $any($event.target).value)">
-                  @for (s of statuses; track s.id) { <option [value]="s.id">{{ s.label }}</option> }
+                  @for (s of statuses; track s.id) { <option [value]="s.id" [selected]="s.id === app.status">{{ s.label }}</option> }
                 </select>
               </label>
             </div>

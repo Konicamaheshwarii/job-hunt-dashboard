@@ -98,11 +98,18 @@ export interface Column {
       }
       @if (goalY() !== null) {
         <line class="goal" [attr.x1]="PAD" [attr.x2]="w()" [attr.y1]="goalY()" [attr.y2]="goalY()" />
-        <text class="label" [attr.x]="w()" [attr.y]="goalY()! - 5" text-anchor="end">Goal {{ goal() }}/week</text>
       }
     </svg>
+    @if (goal()) {
+      <p class="legend"><svg width="22" height="6" aria-hidden="true"><line x1="0" x2="22" y1="3" y2="3" class="goal-key" /></svg>Goal: {{ goal() }} per week</p>
+    }
   `,
-  styles: `.mark { outline: none; } .mark:focus-visible .bar { stroke: var(--text); stroke-width: 2; }`,
+  styles: `
+    .mark { outline: none; } .mark:focus-visible .bar { stroke: var(--text); stroke-width: 2; }
+    .chart .label { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; }
+    .legend { display: flex; align-items: center; gap: 0.4rem; margin: 0.4rem 0 0; font-size: 0.8rem; color: var(--muted); }
+    .goal-key { stroke: var(--text); stroke-width: 1.5; stroke-dasharray: 4 3; }
+  `,
 })
 export class ColumnChart {
   readonly columns = input.required<Column[]>();

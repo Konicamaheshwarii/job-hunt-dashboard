@@ -93,7 +93,12 @@ export function demoGapAnalysis({ profile, match }: GapInput): GapAnalysis {
   const suggestions: BulletSuggestion[] = [];
   for (const { bullet, skills } of relevantBullets(allBullets(profile), match.matched)) {
     const suggestion = rephraseBullet(bullet);
-    if (suggestion) suggestions.push({ original: bullet, suggestion, reason: `Puts ${list(skills)} up front, which the job asks for.` });
+    if (suggestion) {
+      const reason = suggestion.startsWith('Using ')
+        ? `Puts ${list(skills)} up front, where recruiters and ATS scans look first.`
+        : `Stronger opening verb; keeps ${list(skills)}, which the job asks for.`;
+      suggestions.push({ original: bullet, suggestion, reason });
+    }
     if (suggestions.length >= 4) break;
   }
   return { summary, gaps, suggestions };
