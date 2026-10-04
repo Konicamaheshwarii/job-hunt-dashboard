@@ -1,0 +1,55 @@
+<app-pipeline-tabs heading="Pipeline" sub="Drag cards between stages, or use the stage menu on each card." />
+
+<div class="row filters">
+  <label class="search">
+    <span class="sr-only">Filter applications</span>
+    <input type="search" placeholder="Filter by company, role or location" [value]="query()" (input)="query.set($any($event.target).value)" />
+  </label>
+</div>
+
+<p class="sr-only" aria-live="polite">{{ announcement() }}</p>
+
+<div class="board">
+  @for (col of columns(); track col.id) {
+    <section class="column" [class.over]="over() === col.id" [attr.aria-label]="col.label + ', ' + col.apps.length + ' applications'"
+             (dragover)="onDragOver($event, col.id)" (dragleave)="over.set(null)" (drop)="onDrop($event, col.id)">
+      <header>
+        <span class="status st-{{ col.id }}">{{ col.label }}</span>
+        <span class="count">{{ col.apps.length }}</span>
+      </header>
+      <div class="cards">
+        @for (app of col.apps; track app.id) {
+          <article class="card-item" draggable="true" [class.dragging]="dragging() === app.id"
+                   (dragstart)="onDragStart($event, app)" (dragend)="onDragEnd()">
+            <a class="title" [routerLink]="['/app', app.id]">
+              <strong>{{ app.company }}</strong>
+              <span>{{ app.role }}</span>
+            </a>
+            <div class="meta">
+              @if (app | salary; as pay) { <span>{{ pay }}</span> }
+              <span>{{ app.workMode === 'remote' ? 'Remote' : app.location }}</span>
+              @if (app.matchScore !== undefined) { <span class="chip">{{ app.matchScore }}% match</span> }
+            </div>
+            @if (nextInterview(app); as iv) {
+              <div class="chip warn">Interview {{ iv | ago }}</div>
+            }
+            @if (quietDays(app); as quiet) {
+              <div class="chip bad" title="Likely ghosted: no activity for a long time">Quiet {{ quiet }} days</div>
+            }
+            <div class="foot">
+              <span class="muted small">{{ daysInStage(app) }}d in stage</span>
+              <label class="move">
+                <span class="sr-only">Move {{ app.company }} to</span>
+                <select [value]="app.status" (change)="moveTo(app.id, $any($event.target).value)">
+                  @for (s of statuses; track s.id) { <option [value]="s.id">{{ s.label }}</option> }
+                </select>
+              </label>
+            </div>
+          </article>
+        } @empty {
+          <p class="drop-hint">Drop here</p>
+        }
+      </div>
+    </section>
+  }
+</div>

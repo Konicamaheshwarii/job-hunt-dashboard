@@ -1,0 +1,82 @@
+<div class="page-head">
+  <div>
+    <h1>Resume</h1>
+    <p class="muted">Paste your resume or upload a PDF. It is parsed into a profile the matcher and letter writer use. It stays in this browser.</p>
+  </div>
+</div>
+
+<div class="layout">
+  <section class="card stack">
+    <div class="row">
+      <h2>Source text</h2>
+      <span class="spacer"></span>
+      <label class="btn small upload" [class.disabled]="busy()">
+        @if (busy()) { <span class="spinner" aria-hidden="true"></span> Reading… } @else { Upload PDF / .txt }
+        <input type="file" accept=".pdf,.txt,.md,application/pdf,text/plain" (change)="upload($event)" [disabled]="busy()" class="sr-only" />
+      </label>
+      <button class="btn small" type="button" (click)="loadDemo()">Use demo resume</button>
+    </div>
+    <label>
+      <span class="sr-only">Resume text</span>
+      <textarea rows="22" [value]="text()" (input)="text.set($any($event.target).value)" placeholder="Paste your resume as plain text"></textarea>
+    </label>
+    <div class="row">
+      <button class="btn primary" type="button" (click)="parse()" [disabled]="!text().trim()">{{ dirty() ? 'Parse changes' : 'Re-parse' }}</button>
+      @if (message()) { <span class="muted small" role="status">{{ message() }}</span> }
+    </div>
+    @if (error()) { <p class="alert" role="alert">{{ error() }}</p> }
+  </section>
+
+  <section class="card stack profile" aria-labelledby="profile-h">
+    <h2 id="profile-h">Parsed profile</h2>
+    @let p = store.profile();
+    <div>
+      <div class="name">{{ p.name || 'Name not found' }}</div>
+      @if (p.headline) { <div>{{ p.headline }}</div> }
+      <div class="muted small">{{ contactLine() }}</div>
+    </div>
+    @if (p.summary) { <p class="small">{{ p.summary }}</p> }
+
+    <div class="stack tight">
+      <h3>Skills ({{ p.skills.length }})</h3>
+      @for (g of skillGroups(); track g.label) {
+        <div class="group">
+          <span class="muted small">{{ g.label }}</span>
+          <div class="chips">
+            @for (s of g.skills; track s) {
+              <span class="chip">{{ s }}
+                <button type="button" class="x" (click)="removeSkill(s)" [attr.aria-label]="'Remove ' + s">×</button>
+              </span>
+            }
+          </div>
+        </div>
+      }
+      <form class="row add" (submit)="$event.preventDefault(); addSkill()">
+        <label class="grow"><span class="sr-only">Add a skill</span>
+          <input type="text" placeholder="Add a skill, e.g. GraphQL" [value]="newSkill()" (input)="newSkill.set($any($event.target).value)" />
+        </label>
+        <button class="btn small" type="submit" [disabled]="!newSkill().trim()">Add</button>
+      </form>
+    </div>
+
+    <div class="stack tight">
+      <h3>Experience</h3>
+      @for (e of p.experience; track $index) {
+        <div class="role">
+          <strong>{{ e.title }}</strong>@if (e.company) { <span> · {{ e.company }}</span> }
+          @if (e.period) { <div class="muted small">{{ e.period }}</div> }
+          <ul>@for (b of e.bullets; track $index) { <li>{{ b }}</li> }</ul>
+        </div>
+      } @empty { <p class="muted small">No roles found. Use an "Experience" heading and put each role on its own line.</p> }
+    </div>
+
+    @if (p.education.length) {
+      <div class="stack tight">
+        <h3>Education</h3>
+        @for (e of p.education; track $index) { <div class="small">{{ e }}</div> }
+      </div>
+    }
+
+    <a class="btn primary" routerLink="/match">Match against a job →</a>
+  </section>
+</div>

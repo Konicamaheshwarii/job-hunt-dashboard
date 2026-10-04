@@ -1,0 +1,134 @@
+@if (missing()) {
+  <div class="card empty">
+    <h1>Application not found</h1>
+    <p>It may have been deleted. <a routerLink="/board">Back to the pipeline</a></p>
+  </div>
+} @else {
+  @let d = draft();
+  <form class="stack" (ngSubmit)="save()" #f="ngForm">
+    <div class="page-head">
+      <div>
+        <a routerLink="/board" class="small">← Pipeline</a>
+        <h1>{{ isNew() ? 'New application' : d.company + ' · ' + d.role }}</h1>
+      </div>
+      <span class="spacer"></span>
+      @if (saved()) { <span class="muted small" role="status">{{ saved() }}</span> }
+      @if (!isNew()) { <button class="btn danger" type="button" (click)="remove()">Delete</button> }
+      <button class="btn primary" type="submit" [disabled]="!d.company.trim() || !d.role.trim()">Save</button>
+    </div>
+
+    @if (suggestions().length) {
+      <div class="note stack">
+        @for (s of suggestions(); track s.id) {
+          <div class="row"><strong>{{ s.title }}</strong><span class="muted small">{{ s.overdue ? 'overdue since' : 'due' }} {{ s.due }}</span></div>
+        }
+      </div>
+    }
+
+    <div class="grid-2">
+      <section class="card stack">
+        <h2>The job</h2>
+        <div class="two">
+          <label>Company *<input type="text" name="company" required [(ngModel)]="d.company" /></label>
+          <label>Role *<input type="text" name="role" required [(ngModel)]="d.role" /></label>
+        </div>
+        <label>Link<input type="url" name="link" [(ngModel)]="d.link" placeholder="https://" /></label>
+        <div class="two">
+          <label>Location<input type="text" name="location" [(ngModel)]="d.location" /></label>
+          <label>Work mode
+            <select name="workMode" [(ngModel)]="d.workMode">
+              <option value="remote">Remote</option><option value="hybrid">Hybrid</option><option value="onsite">On-site</option>
+            </select>
+          </label>
+        </div>
+        <div class="three">
+          <label>Salary min<input type="number" name="salaryMin" min="0" step="1000" [(ngModel)]="d.salaryMin" /></label>
+          <label>Salary max<input type="number" name="salaryMax" min="0" step="1000" [(ngModel)]="d.salaryMax" /></label>
+          <label>Currency
+            <select name="currency" [(ngModel)]="d.currency">
+              @for (c of ['USD', 'EUR', 'GBP', 'INR', 'CAD', 'AUD']; track c) { <option [value]="c">{{ c }}</option> }
+            </select>
+          </label>
+        </div>
+        <label>Source
+          <select name="source" [(ngModel)]="d.source">
+            @for (s of sources; track s) { <option [value]="s">{{ s }}</option> }
+          </select>
+        </label>
+        <label>Notes<textarea name="notes" rows="4" [(ngModel)]="d.notes"></textarea></label>
+      </section>
+
+      <section class="card stack">
+        <h2>Status</h2>
+        <label>Current stage
+          <select name="status" [ngModel]="d.status" (ngModelChange)="onStatus($event)">
+            @for (s of statuses; track s.id) { <option [value]="s.id">{{ s.label }}</option> }
+          </select>
+        </label>
+        <div>
+          <h3>History</h3>
+          <ol class="timeline">
+            @for (h of d.history; track $index; let i = $index) {
+              <li>
+                <span class="status st-{{ h.status }}">{{ statusLabel(h.status) }}</span>
+                <label class="date"><span class="sr-only">Date of {{ statusLabel(h.status) }}</span>
+                  <input type="date" [value]="h.date.slice(0, 10)" (change)="setHistoryDate(i, $any($event.target).value)" />
+                </label>
+                <button class="btn small" type="button" (click)="removeHistory(i)" [disabled]="d.history.length <= 1"
+                        [attr.aria-label]="'Remove ' + statusLabel(h.status) + ' step'">✕</button>
+              </li>
+            }
+          </ol>
+        </div>
+        <div class="two">
+          <label>Next action<input type="text" name="nextAction" [(ngModel)]="d.nextAction" placeholder="e.g. Send thank-you note" /></label>
+          <label>Due<input type="date" name="nextActionDate" [(ngModel)]="d.nextActionDate" /></label>
+        </div>
+        @if (!isNew()) {
+          <div class="row">
+            <button class="btn" type="button" (click)="logFollowUp()">Log a follow-up sent today</button>
+            @if (d.lastContacted) { <span class="muted small">Last follow-up {{ d.lastContacted | ago }}</span> }
+          </div>
+        }
+      </section>
+
+      <section class="card stack">
+        <div class="row"><h2>Interviews</h2><span class="spacer"></span><button class="btn small" type="button" (click)="addInterview()">+ Add</button></div>
+        @for (iv of d.interviews; track iv.id; let i = $index) {
+          <div class="sub">
+            <label>When<input type="datetime-local" [value]="toLocalInput(iv.date)" (change)="setInterviewDate(i, $any($event.target).value)" /></label>
+            <label>Type<input type="text" [name]="'kind' + i" [(ngModel)]="iv.kind" /></label>
+            <label>Minutes<input type="number" min="15" step="15" [name]="'dur' + i" [(ngModel)]="iv.durationMin" /></label>
+            <button class="btn small danger" type="button" (click)="removeInterview(i)" [attr.aria-label]="'Remove interview ' + (i + 1)">Remove</button>
+          </div>
+        } @empty { <p class="muted">No interviews yet.</p> }
+      </section>
+
+      <section class="card stack">
+        <div class="row"><h2>Contacts</h2><span class="spacer"></span><button class="btn small" type="button" (click)="addContact()">+ Add</button></div>
+        @for (c of d.contacts; track $index; let i = $index) {
+          <div class="sub">
+            <label>Name<input type="text" [name]="'cn' + i" [(ngModel)]="c.name" /></label>
+            <label>Role<input type="text" [name]="'cr' + i" [(ngModel)]="c.role" /></label>
+            <label>Email<input type="email" [name]="'ce' + i" [(ngModel)]="c.email" /></label>
+            <button class="btn small danger" type="button" (click)="removeContact(i)" [attr.aria-label]="'Remove contact ' + (c.name || i + 1)">Remove</button>
+          </div>
+        } @empty { <p class="muted">No contacts yet.</p> }
+      </section>
+    </div>
+
+    <section class="card stack">
+      <div class="row">
+        <h2>Job description</h2>
+        @if (d.matchScore !== undefined) { <span class="chip">{{ d.matchScore }}% match</span> }
+        <span class="spacer"></span>
+        @if (!isNew()) {
+          <button class="btn" type="button" (click)="matchThis()" [disabled]="!d.jobDescription?.trim()">Match against my resume →</button>
+        }
+      </div>
+      <label><span class="sr-only">Job description</span>
+        <textarea name="jd" rows="8" [(ngModel)]="d.jobDescription" placeholder="Paste the job posting to match it against your resume."></textarea>
+      </label>
+    </section>
+  </form>
+}

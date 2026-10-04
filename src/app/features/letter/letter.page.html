@@ -1,0 +1,71 @@
+<div class="page-head">
+  <div>
+    <h1>Cover letter</h1>
+    <p class="muted">Written from your resume and the job description, streamed live. Edit it, then copy or download.</p>
+  </div>
+</div>
+
+<div class="layout">
+  <section class="card stack">
+    <label>
+      Application
+      <select [value]="job().appId" (change)="pickApp($any($event.target).value)">
+        <option value="">Custom</option>
+        @for (a of apps.all(); track a.id) { <option [value]="a.id">{{ a.company }} · {{ a.role }}</option> }
+      </select>
+    </label>
+    <div class="two">
+      <label>Company<input type="text" [value]="job().company" (input)="profile.setJob({ company: $any($event.target).value })" /></label>
+      <label>Role<input type="text" [value]="job().role" (input)="profile.setJob({ role: $any($event.target).value })" /></label>
+    </div>
+    <label>
+      Job description
+      <textarea rows="8" [value]="job().jobDescription" (input)="profile.setJob({ jobDescription: $any($event.target).value })"></textarea>
+    </label>
+    <fieldset>
+      <legend>Tone</legend>
+      <div class="tones" role="radiogroup" aria-label="Tone">
+        @for (t of tones; track t.id) {
+          <button type="button" role="radio" class="tone" [class.on]="tone() === t.id" [attr.aria-checked]="tone() === t.id" (click)="tone.set(t.id)">
+            <strong>{{ t.label }}</strong><span class="muted small">{{ t.hint }}</span>
+          </button>
+        }
+      </div>
+    </fieldset>
+    <p class="muted small">
+      Draws on {{ match().matched.length }} matched skill{{ match().matched.length === 1 ? '' : 's' }} from the
+      <a routerLink="/match">match</a>. Missing skills are never claimed.
+      @if (settings.isDemo()) { Demo mode fills a template from your resume; add a key in <a routerLink="/settings">Settings</a> for an AI-written letter. }
+    </p>
+    <div class="row">
+      @if (streaming()) {
+        <button class="btn" type="button" (click)="stop()">Stop</button>
+      } @else {
+        <button class="btn primary" type="button" (click)="generate()" [disabled]="!profile.hasResume() || settings.needsKey()">
+          {{ letter() ? 'Regenerate' : 'Write my letter' }}
+        </button>
+      }
+      @if (settings.needsKey()) { <span class="score-bad small">Add an API key in Settings first.</span> }
+    </div>
+    @if (error()) { <p class="alert" role="alert">{{ error() }}</p> }
+  </section>
+
+  <section class="card stack" aria-labelledby="out-h">
+    <div class="row">
+      <h2 id="out-h">Your letter</h2>
+      @if (streaming()) { <span class="spinner" aria-label="Writing"></span> }
+      <span class="spacer"></span>
+      <span class="muted small">{{ words() }} words</span>
+    </div>
+    <label>
+      <span class="sr-only">Cover letter text</span>
+      <textarea class="letter" rows="22" [value]="letter()" (input)="setLetter($any($event.target).value)" [readonly]="streaming()"
+                placeholder="Your letter will appear here."></textarea>
+    </label>
+    <div class="row">
+      <button class="btn" type="button" (click)="copy()" [disabled]="!letter() || streaming()">{{ copied() ? 'Copied' : 'Copy' }}</button>
+      <button class="btn" type="button" (click)="download('txt')" [disabled]="!letter() || streaming()">Download .txt</button>
+      <button class="btn" type="button" (click)="download('md')" [disabled]="!letter() || streaming()">Download .md</button>
+    </div>
+  </section>
+</div>

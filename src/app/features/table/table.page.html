@@ -1,0 +1,77 @@
+<app-pipeline-tabs heading="Applications" sub="Sort by any column; filter by stage, source and work mode." />
+
+<div class="filters card">
+  <label class="grow">
+    Search
+    <input type="search" placeholder="Company, role, location, notes or contact" [value]="query()" (input)="query.set($any($event.target).value)" />
+  </label>
+  <label>
+    Stage
+    <select [value]="status()" (change)="status.set($any($event.target).value)">
+      <option value="all">All stages</option>
+      <option value="active">Active (applied → offer)</option>
+      @for (s of statuses; track s.id) { <option [value]="s.id">{{ s.label }}</option> }
+    </select>
+  </label>
+  <label>
+    Source
+    <select [value]="source()" (change)="source.set($any($event.target).value)">
+      <option value="all">All sources</option>
+      @for (s of sources(); track s) { <option [value]="s">{{ s }}</option> }
+    </select>
+  </label>
+  <label>
+    Work mode
+    <select [value]="mode()" (change)="mode.set($any($event.target).value)">
+      <option value="all">Any</option>
+      <option value="remote">Remote</option>
+      <option value="hybrid">Hybrid</option>
+      <option value="onsite">On-site</option>
+    </select>
+  </label>
+  <button class="btn" type="button" (click)="clear()">Reset</button>
+</div>
+
+<p class="muted small" aria-live="polite">{{ rows().length }} application{{ rows().length === 1 ? '' : 's' }}</p>
+
+<div class="table-wrap card">
+  <table>
+    <thead>
+      <tr>
+        @for (c of columns; track c.key) {
+          <th scope="col" [attr.aria-sort]="ariaSort(c.key)">
+            <button type="button" (click)="sortBy(c.key)">
+              {{ c.label }}
+              <span class="arrow" aria-hidden="true">{{ sort().key === c.key ? (sort().dir === 1 ? '▲' : '▼') : '' }}</span>
+            </button>
+          </th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (r of rows(); track r.app.id) {
+        <tr>
+          <td>
+            <a [routerLink]="['/app', r.app.id]"><strong>{{ r.app.company }}</strong></a>
+            <div class="muted small">{{ r.app.role }}</div>
+          </td>
+          <td><span class="status st-{{ r.app.status }}">{{ r.app.status | statusLabel }}</span></td>
+          <td>{{ r.app.source }}</td>
+          <td>{{ r.app.workMode === 'remote' ? 'Remote' : r.app.location }}<div class="muted small">{{ r.app.workMode }}</div></td>
+          <td class="num">{{ r.app | salary }}</td>
+          <td>{{ r.applied ? (r.applied | ago) : '–' }}</td>
+          <td>{{ r.activity | ago }}</td>
+          <td>
+            @if (r.app.nextAction) {
+              {{ r.app.nextAction }}
+              @if (r.app.nextActionDate) { <div class="muted small">{{ r.app.nextActionDate }}</div> }
+            } @else { <span class="muted">–</span> }
+          </td>
+          <td class="num">{{ r.app.matchScore !== undefined ? r.app.matchScore + '%' : '–' }}</td>
+        </tr>
+      } @empty {
+        <tr><td [attr.colspan]="columns.length" class="empty">No applications match these filters.</td></tr>
+      }
+    </tbody>
+  </table>
+</div>

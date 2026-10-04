@@ -1,0 +1,73 @@
+<app-pipeline-tabs heading="Calendar" sub="Interviews, your next actions and suggested follow-ups." />
+
+<div class="layout">
+  <section class="card month" aria-labelledby="month-title">
+    <div class="row head">
+      <h2 id="month-title">{{ title() }}</h2>
+      <span class="spacer"></span>
+      <button class="btn small" type="button" (click)="shift(-1)" aria-label="Previous month">‹</button>
+      <button class="btn small" type="button" (click)="goToday()">Today</button>
+      <button class="btn small" type="button" (click)="shift(1)" aria-label="Next month">›</button>
+    </div>
+    <div class="legend small muted">
+      <span><i class="k-interview"></i>Interview</span>
+      <span><i class="k-action"></i>Next action</span>
+      <span><i class="k-follow-up"></i>Follow-up</span>
+    </div>
+    <div class="grid" role="grid" aria-label="Month view">
+      <div class="row-h" role="row">
+        @for (w of weekdays; track w) { <div class="wd" role="columnheader">{{ w }}</div> }
+      </div>
+      @for (week of weeks(); track $index) {
+        <div class="row-h" role="row">
+          @for (d of week; track d.day) {
+            <button type="button" role="gridcell" class="day" [class.out]="!d.inMonth" [class.today]="d.day === today"
+                    [class.sel]="d.day === selected()" (click)="selected.set(d.day)"
+                    [attr.aria-label]="dayLabel(d.day) + (d.events.length ? ', ' + d.events.length + ' events' : '')"
+                    [attr.aria-selected]="d.day === selected()">
+              <span class="num">{{ d.date }}</span>
+              <span class="evs">
+                @for (e of d.events.slice(0, 3); track $index) {
+                  <span class="ev k-{{ e.kind }}"><span class="ev-text">{{ e.time ? e.time + ' ' : '' }}{{ e.title }}</span></span>
+                }
+                @if (d.events.length > 3) { <span class="more">+{{ d.events.length - 3 }}</span> }
+              </span>
+            </button>
+          }
+        </div>
+      }
+    </div>
+  </section>
+
+  <div class="stack side">
+    <section class="card stack">
+      <h2>{{ dayLabel(selected()) }}</h2>
+      @for (e of dayEvents(); track $index) {
+        <a class="item" [routerLink]="['/app', e.appId]">
+          <span class="tag k-{{ e.kind }}">{{ kindLabel[e.kind] }}{{ e.time ? ' · ' + e.time : '' }}</span>
+          <strong>{{ e.title }}</strong>
+          <span class="muted small">{{ e.sub }}</span>
+        </a>
+      } @empty {
+        <p class="muted">Nothing scheduled.</p>
+      }
+    </section>
+
+    <section class="card stack">
+      <div class="row">
+        <h2>Next 14 days</h2>
+        <span class="spacer"></span>
+        <button class="btn small" type="button" (click)="exportIcs()">Export interviews (.ics)</button>
+      </div>
+      @for (e of upcoming(); track $index) {
+        <a class="item" [routerLink]="['/app', e.appId]">
+          <span class="tag k-{{ e.kind }}">{{ dayLabel(e.day) }}{{ e.time ? ' · ' + e.time : '' }}</span>
+          <strong>{{ e.title }}</strong>
+          <span class="muted small">{{ e.sub }}</span>
+        </a>
+      } @empty {
+        <p class="muted">No interviews or actions in the next two weeks.</p>
+      }
+    </section>
+  </div>
+</div>

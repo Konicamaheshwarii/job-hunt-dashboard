@@ -1,0 +1,95 @@
+<div class="page-head"><h1>Settings</h1></div>
+
+<section class="card stack">
+  <h2>AI provider</h2>
+  <div class="providers" role="radiogroup" aria-label="AI provider">
+    @for (p of providers; track p.id) {
+      <button type="button" role="radio" class="provider" [class.on]="store.provider() === p.id"
+              [attr.aria-checked]="store.provider() === p.id" (click)="choose(p.id)">
+        <strong>{{ p.label }}</strong>
+        <span class="muted">
+          @switch (p.id) {
+            @case ('demo') { Rule-based gap analysis and template letters. Works offline. }
+            @case ('gemini') { Free tier. Best all-round quality. }
+            @case ('groq') { Free tier. Very fast open models. }
+          }
+        </span>
+      </button>
+    }
+  </div>
+
+  @if (real(); as id) {
+    <label>
+      API key
+      <input type="password" autocomplete="off" spellcheck="false" [value]="store.settings().apiKeys[id] ?? ''"
+             (change)="setKey($any($event.target).value)" placeholder="Paste your key" />
+    </label>
+    <p class="muted small">
+      Get a free key at <a [href]="current().keyUrl" target="_blank" rel="noopener">{{ current().keyUrl }}</a>.
+      It is stored in this browser only and sent straight to {{ current().label }}. There is no backend.
+    </p>
+    <label>
+      Model
+      <input type="text" [value]="store.settings().models[id]" (change)="setModel($any($event.target).value)" />
+    </label>
+    <div class="row">
+      <button class="btn" type="button" (click)="testConnection()" [disabled]="store.needsKey() || test().state === 'running'">
+        @if (test().state === 'running') { <span class="spinner" aria-hidden="true"></span> } Test connection
+      </button>
+      <button class="btn danger" type="button" (click)="clearKey()" [disabled]="store.needsKey()">Remove key</button>
+      @if (test().message) {
+        <span [class]="test().state === 'ok' ? 'score-good' : 'score-bad'" role="status">{{ test().message }}</span>
+      }
+    </div>
+  }
+</section>
+
+<section class="card stack">
+  <h2>Reminder rules</h2>
+  <div class="rules">
+    <label>
+      Follow up after (days)
+      <input type="number" min="1" max="60" [value]="store.settings().followUpDays" (change)="setNumber('followUpDays', $any($event.target).value, 1, 60)" />
+      <span class="muted small">Suggest a follow-up when an application gets no reply for this long.</span>
+    </label>
+    <label>
+      Ghosted after (days)
+      <input type="number" min="3" max="120" [value]="store.settings().ghostDays" (change)="setNumber('ghostDays', $any($event.target).value, 3, 120)" />
+      <span class="muted small">Flag open applications with no activity for this long.</span>
+    </label>
+    <label>
+      Weekly goal
+      <input type="number" min="1" max="100" [value]="store.settings().weeklyGoal" (change)="setNumber('weeklyGoal', $any($event.target).value, 1, 100)" />
+      <span class="muted small">Applications you aim to send per week.</span>
+    </label>
+  </div>
+</section>
+
+<section class="card stack">
+  <h2>Data</h2>
+  <p class="muted small">Everything is stored in this browser ({{ count() }} applications). Export regularly to keep a copy.</p>
+  <div class="row">
+    <button class="btn" type="button" (click)="exportCsv()">Export CSV</button>
+    <label class="btn file">Import CSV<input type="file" accept=".csv,text/csv" class="sr-only" (change)="importCsv($event)" /></label>
+    <button class="btn" type="button" (click)="exportJson()">Download JSON backup</button>
+    <label class="btn file">Restore JSON backup<input type="file" accept=".json,application/json" class="sr-only" (change)="importJson($event)" /></label>
+  </div>
+  <p class="muted small">CSV import accepts this app's export or any spreadsheet with Company and Role columns (Status, Link, Date applied and Notes are picked up too). Backups never include API keys.</p>
+  <div class="row">
+    <button class="btn" type="button" (click)="resetDemo()">Load demo data</button>
+    <button class="btn danger" type="button" (click)="clearAll()">Delete all applications</button>
+  </div>
+  @if (dataMessage(); as m) { <p [class]="m.ok ? 'score-good' : 'score-bad'" role="status">{{ m.text }}</p> }
+</section>
+
+<section class="card stack">
+  <h2>Appearance</h2>
+  <div class="row" role="radiogroup" aria-label="Theme">
+    @for (t of themes; track t) {
+      <button type="button" role="radio" class="btn" [class.primary]="store.settings().theme === t"
+              [attr.aria-checked]="store.settings().theme === t" (click)="store.update({ theme: t })">
+        {{ t === 'system' ? 'Match system' : t === 'light' ? 'Light' : 'Dark' }}
+      </button>
+    }
+  </div>
+</section>

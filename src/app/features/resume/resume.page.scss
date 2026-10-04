@@ -1,0 +1,38 @@
+:host { display: block; }
+
+.layout {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  align-items: start;
+}
+
+h2, h3 { margin: 0; }
+h3 { font-size: 0.95rem; }
+.tight { gap: 0.5rem; }
+
+textarea { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.82rem; }
+
+.upload { position: relative; font-weight: 600; display: inline-flex; &:focus-within { outline: 2px solid var(--accent); } }
+
+.name { font-size: 1.2rem; font-weight: 800; }
+
+.group { display: grid; gap: 0.25rem; }
+.chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.x {
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  padding: 0 0 0 0.15rem;
+  line-height: 1;
+  opacity: 0.7;
+  &:hover, &:focus-visible { opacity: 1; }
+}
+.add { gap: 0.5rem; }
+.grow { flex: 1; }
+
+.role {
+  ul { margin: 0.3rem 0 0; padding-left: 1.1rem; font-size: 0.88rem; display: grid; gap: 0.2rem; }
+}

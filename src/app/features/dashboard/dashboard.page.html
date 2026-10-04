@@ -1,0 +1,109 @@
+<div class="page-head">
+  <div>
+    <h1>Today</h1>
+    <p class="muted">What needs your attention in the job hunt.</p>
+  </div>
+  <span class="spacer"></span>
+  <a class="btn primary" routerLink="/app/new">+ Add application</a>
+</div>
+
+@if (store.isDemoData()) {
+  <p class="note">You are looking at demo data: {{ store.all().length }} applications to fictional companies from the last two months. Clear it or import your own CSV in <a routerLink="/settings">Settings</a>.</p>
+}
+
+<section class="kpis" aria-label="Key numbers">
+  <a class="kpi card" routerLink="/table"><span class="v">{{ kpis().active }}</span><span class="l">Active applications</span></a>
+  <a class="kpi card" routerLink="/calendar"><span class="v">{{ kpis().interviews }}</span><span class="l">Upcoming interviews</span></a>
+  <a class="kpi card" routerLink="/board"><span class="v">{{ kpis().offers }}</span><span class="l">Open offers</span></a>
+  <a class="kpi card" routerLink="/analytics"><span class="v">{{ percent(kpis().responseRate) }}</span><span class="l">Response rate</span></a>
+  <a class="kpi card" routerLink="/analytics">
+    <span class="v">{{ thisWeek() }}<small>/{{ goal() }}</small></span>
+    <span class="l">Applied this week</span>
+    <span class="meter" role="meter" aria-label="Weekly goal progress" [attr.aria-valuenow]="thisWeek()" aria-valuemin="0" [attr.aria-valuemax]="goal()">
+      <span [style.width.%]="goal() ? (thisWeek() / goal()) * 100 : 0"></span>
+    </span>
+  </a>
+</section>
+
+<div class="grid-2">
+  <section class="card stack" aria-labelledby="rem-h">
+    <div class="row">
+      <h2 id="rem-h">Follow-ups &amp; next steps</h2>
+      <span class="chip plain">{{ reminders().length }}</span>
+    </div>
+    <ul class="list">
+      @for (r of reminders(); track r.id) {
+        <li [class.overdue]="r.overdue">
+          <div class="grow">
+            <strong>{{ r.title }}</strong>
+            <div class="muted small">{{ r.detail }}</div>
+            <div class="small" [class.score-bad]="r.overdue">{{ r.overdue ? 'Overdue since ' + r.due : 'Due ' + r.due }}</div>
+          </div>
+          <div class="actions">
+            @if (canLogFollowUp(r)) {
+              <button class="btn small" type="button" (click)="store.logFollowUp(r.appId)" [attr.aria-label]="'Mark follow-up sent for ' + companyOf(r)">Done</button>
+            }
+            <a class="btn small" [routerLink]="['/app', r.appId]" [attr.aria-label]="'Open ' + companyOf(r)">Open</a>
+          </div>
+        </li>
+      } @empty {
+        <li class="muted">You are all caught up.</li>
+      }
+    </ul>
+  </section>
+
+  <div class="stack">
+    <section class="card stack" aria-labelledby="iv-h">
+      <div class="row">
+        <h2 id="iv-h">Interviews, next 14 days</h2>
+        <span class="spacer"></span>
+        <button class="btn small" type="button" (click)="exportIcs()" [disabled]="!interviews().length">Add to calendar (.ics)</button>
+      </div>
+      <ul class="list">
+        @for (x of interviews(); track x.iv.id) {
+          <li>
+            <div class="date">{{ when(x.iv.date) }}</div>
+            <div class="grow">
+              <a [routerLink]="['/app', x.app.id]"><strong>{{ x.app.company }}</strong></a>
+              <div class="muted small">{{ x.iv.kind }} · {{ x.app.role }}</div>
+            </div>
+          </li>
+        } @empty {
+          <li class="muted">No interviews scheduled.</li>
+        }
+      </ul>
+    </section>
+
+    <section class="card stack" aria-labelledby="gh-h">
+      <h2 id="gh-h">Likely ghosted</h2>
+      <p class="muted small">Open applications with no activity for {{ settings.settings().ghostDays }}+ days and nothing scheduled.</p>
+      <ul class="list">
+        @for (g of ghosts(); track g.app.id) {
+          <li>
+            <div class="grow">
+              <a [routerLink]="['/app', g.app.id]"><strong>{{ g.app.company }}</strong></a>
+              <div class="muted small">{{ g.app.role }} · quiet for {{ g.quietDays }} days</div>
+            </div>
+            <button class="btn small" type="button" (click)="markGhosted(g.app.id)">Mark ghosted</button>
+          </li>
+        } @empty {
+          <li class="muted">Nothing has gone quiet.</li>
+        }
+      </ul>
+    </section>
+
+    <section class="card stack" aria-labelledby="nt-h">
+      <h2 id="nt-h">Reminder notifications</h2>
+      @switch (notifier.permission()) {
+        @case ('unsupported') { <p class="muted small">This browser does not support notifications.</p> }
+        @case ('denied') { <p class="muted small">Notifications are blocked for this site. Allow them in your browser's site settings to turn this on.</p> }
+        @default {
+          <p class="muted small">Get one browser notification a day when follow-ups are due. Nothing leaves your browser.</p>
+          <div><button class="btn" type="button" (click)="toggleNotifications()" [attr.aria-pressed]="notifier.enabled()">
+            {{ notifier.enabled() ? 'Turn off notifications' : 'Turn on notifications' }}
+          </button></div>
+        }
+      }
+    </section>
+  </div>
+</div>

@@ -1,0 +1,83 @@
+<div class="page-head">
+  <div>
+    <h1>Analytics</h1>
+    <p class="muted">Where your applications convert, which channels answer, and where things stall.</p>
+  </div>
+</div>
+
+<section class="kpis" aria-label="Summary">
+  <div class="card kpi"><span class="v">{{ funnel()[0].count }}</span><span class="l">Applications sent</span></div>
+  <div class="card kpi"><span class="v">{{ percent(kpis().responseRate) }}</span><span class="l">Got any response</span></div>
+  <div class="card kpi"><span class="v">{{ percent(funnel()[2].overall) }}</span><span class="l">Reached interview</span></div>
+  <div class="card kpi"><span class="v">{{ percent(funnel()[3].overall) }}</span><span class="l">Reached offer</span></div>
+</section>
+
+<div class="grid-2">
+  <section class="card stack">
+    <div>
+      <h2>Funnel</h2>
+      <p class="muted small">Every application that ever reached each stage, with the conversion from the step before.</p>
+    </div>
+    <app-hbar-chart [rows]="funnelRows()" label="Application funnel: applied, screening, interview, offer" />
+    <details>
+      <summary>Show as table</summary>
+      <table>
+        <thead><tr><th scope="col">Stage</th><th scope="col">Count</th><th scope="col">From previous</th><th scope="col">Overall</th></tr></thead>
+        <tbody>
+          @for (s of funnel(); track s.status) {
+            <tr><td>{{ statusLabel(s.status) }}</td><td>{{ s.count }}</td><td>{{ percent(s.conversion) }}</td><td>{{ percent(s.overall) }}</td></tr>
+          }
+        </tbody>
+      </table>
+    </details>
+  </section>
+
+  <section class="card stack">
+    <div>
+      <h2>Response rate by source</h2>
+      <p class="muted small">A response is any reply: a screen, an interview or a rejection. Silence does not count.</p>
+    </div>
+    <app-hbar-chart [rows]="sourceRows()" [max]="100" label="Response rate by source" />
+    @if (bestSource(); as b) {
+      <p class="small"><strong>{{ b.source }}</strong> answers most often ({{ percent(b.rate) }} of {{ b.applied }}). Put more effort there.</p>
+    }
+  </section>
+
+  <section class="card stack">
+    <div>
+      <h2>Applications per week</h2>
+      <p class="muted small">Last 8 weeks against your goal of {{ settings.settings().weeklyGoal }}. You hit it in {{ weeksOnGoal() }} of 8 weeks.</p>
+    </div>
+    <app-column-chart [columns]="weekColumns()" [goal]="settings.settings().weeklyGoal" label="Applications per week for the last 8 weeks" />
+  </section>
+
+  <section class="card stack">
+    <div>
+      <h2>Time in stage</h2>
+      <p class="muted small">Average days spent in a stage before the next status change.</p>
+    </div>
+    @if (stageRows().length) {
+      <app-hbar-chart [rows]="stageRows()" label="Average days in each stage" />
+    } @else {
+      <p class="muted">Not enough status changes yet.</p>
+    }
+  </section>
+</div>
+
+<section class="card stack ghosts">
+  <div class="row">
+    <h2>Ghosted detector</h2>
+    <span class="chip" [class.bad]="ghosts().length">{{ ghosts().length }} quiet for {{ settings.settings().ghostDays }}+ days</span>
+    <span class="spacer"></span>
+    <a routerLink="/settings" class="small">Change threshold</a>
+  </div>
+  @if (ghosts().length) {
+    <ul>
+      @for (g of ghosts(); track g.app.id) {
+        <li><a [routerLink]="['/app', g.app.id]">{{ g.app.company }}</a> <span class="muted">· {{ statusLabel(g.app.status) }} · {{ g.quietDays }} days without news</span></li>
+      }
+    </ul>
+  } @else {
+    <p class="muted">No open application has gone quiet.</p>
+  }
+</section>

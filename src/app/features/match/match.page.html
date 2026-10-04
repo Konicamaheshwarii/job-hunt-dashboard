@@ -1,0 +1,121 @@
+<div class="page-head">
+  <div>
+    <h1>Resume match</h1>
+    <p class="muted">Paste a job description. The ATS-style keyword match runs instantly, offline; the AI analysis suggests honest rewrites.</p>
+  </div>
+</div>
+
+@if (!profile.hasResume()) {
+  <p class="note">Add your resume first on the <a routerLink="/resume">Resume</a> page.</p>
+}
+
+<div class="layout">
+  <section class="card stack">
+    <label>
+      Link to an application (optional)
+      <select [value]="job().appId" (change)="pickApp($any($event.target).value)">
+        <option value="">None</option>
+        @for (a of apps.all(); track a.id) { <option [value]="a.id">{{ a.company }} · {{ a.role }}</option> }
+      </select>
+    </label>
+    <label>
+      Job description
+      <textarea rows="18" [value]="job().jobDescription" (input)="setJd($any($event.target).value)"
+                placeholder="Paste the full job posting, including requirements and nice-to-haves"></textarea>
+    </label>
+  </section>
+
+  <section class="card stack" aria-labelledby="score-h" aria-live="polite">
+    <div class="score-row">
+      <div class="ring score-{{ band() }}" [style.--p]="match().score" role="img" [attr.aria-label]="'Match score ' + match().score + ' percent'">
+        <span>{{ match().score }}<small>%</small></span>
+      </div>
+      <div>
+        <h2 id="score-h">Keyword match</h2>
+        <p class="muted small">{{ match().matched.length }} of {{ match().jdSkills.length }} skills found in your resume. Required skills count double, nice-to-haves count less.</p>
+        @if (linkedApp(); as a) {
+          <button class="btn small" type="button" (click)="saveScore()" [disabled]="savedScore()">
+            {{ savedScore() ? 'Saved to ' + a.company : 'Save score to ' + a.company }}
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (match().jdSkills.length) {
+      <div>
+        <h3>Missing ({{ match().missing.length }})</h3>
+        <div class="chips">
+          @for (s of match().missing; track s.name) {
+            <span class="chip bad" [title]="importanceLabel[s.importance] + ', mentioned ' + s.mentions + 'x'">✕ {{ s.name }}<em>{{ importanceLabel[s.importance] }}</em></span>
+          } @empty { <span class="muted small">Nothing missing. Nice.</span> }
+        </div>
+      </div>
+      <div>
+        <h3>Matched ({{ match().matched.length }})</h3>
+        <div class="chips">
+          @for (s of match().matched; track s.name) {
+            <span class="chip good" [title]="importanceLabel[s.importance] + ', mentioned ' + s.mentions + 'x'">✓ {{ s.name }}<em>{{ importanceLabel[s.importance] }}</em></span>
+          }
+        </div>
+      </div>
+      @if (match().extra.length) {
+        <details>
+          <summary class="small muted">Your other skills not mentioned in this job ({{ match().extra.length }})</summary>
+          <div class="chips">@for (s of match().extra; track s) { <span class="chip plain">{{ s }}</span> }</div>
+        </details>
+      }
+    } @else {
+      <p class="muted">No known skills found in the job description yet.</p>
+    }
+  </section>
+</div>
+
+<section class="card stack ai" aria-labelledby="ai-h">
+  <div class="row">
+    <div>
+      <h2 id="ai-h">Gap analysis &amp; bullet suggestions</h2>
+      <p class="muted small">
+        @if (settings.isDemo()) { Demo mode: rule-based analysis. Add a Gemini or Groq key in <a routerLink="/settings">Settings</a> for AI analysis. }
+        @else { Uses your AI provider. Every suggested rewrite is checked against your resume before it is shown. }
+      </p>
+    </div>
+    <span class="spacer"></span>
+    <button class="btn primary" type="button" (click)="analyze()"
+            [disabled]="loading() || !job().jobDescription.trim() || !profile.hasResume() || settings.needsKey()">
+      @if (loading()) { <span class="spinner" aria-hidden="true"></span> Analyzing… } @else { Analyze }
+    </button>
+  </div>
+  @if (settings.needsKey()) { <p class="alert">Add an API key in <a routerLink="/settings">Settings</a>, or switch to Demo.</p> }
+  @if (error()) { <p class="alert" role="alert">{{ error() }}</p> }
+
+  @if (analysis(); as a) {
+    @if (a.summary) { <p>{{ a.summary }}</p> }
+    @if (a.gaps.length) {
+      <h3>Gaps</h3>
+      <ul class="gaps">
+        @for (g of a.gaps; track g.skill) { <li><strong>{{ g.skill }}:</strong> {{ g.advice }}</li> }
+      </ul>
+    }
+    @if (checked(); as c) {
+      <h3>Suggested rewrites ({{ c.accepted.length }})</h3>
+      @for (s of c.accepted; track $index; let i = $index) {
+        <div class="sugg">
+          <div class="before"><span class="lbl">Before</span>{{ s.original }}</div>
+          <div class="after"><span class="lbl">After</span>{{ s.suggestion }}</div>
+          <div class="row">
+            @if (s.reason) { <span class="muted small grow">{{ s.reason }}</span> }
+            <button class="btn small" type="button" (click)="copy(s.suggestion, i)">{{ copied() === i ? 'Copied' : 'Copy' }}</button>
+          </div>
+        </div>
+      } @empty {
+        <p class="muted small">No rewrites passed the check.</p>
+      }
+      @if (c.rejected.length) {
+        <div class="note">
+          <strong>{{ c.rejected.length }} suggestion{{ c.rejected.length === 1 ? '' : 's' }} removed</strong> because they did not stay true to your resume:
+          <ul>@for (r of c.rejected; track $index) { <li><em>"{{ r.suggestion.suggestion }}"</em> — {{ r.why }}</li> }</ul>
+        </div>
+      }
+    }
+  }
+</section>
