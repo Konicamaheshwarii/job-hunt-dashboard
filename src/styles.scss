@@ -1,0 +1,219 @@
+:root {
+  --bg: #f6f7f8;
+  --surface: #ffffff;
+  --surface-2: #eff2f3;
+  --text: #15201f;
+  --muted: #5b6b69;
+  --border: #dfe5e5;
+  --accent: #0f766e;
+  --accent-text: #ffffff;
+  --accent-soft: #e0f2ef;
+  --good: #15803d;
+  --warn: #a35f00;
+  --bad: #c03a3a;
+  --radius: 14px;
+  --shadow: 0 1px 2px rgb(15 40 40 / 6%), 0 4px 16px rgb(15 40 40 / 5%);
+
+  // Pipeline stage colours: identity only, always shown next to the stage name.
+  --st-wishlist: #7c8a89;
+  --st-applied: #2a78d6;
+  --st-screening: #7c5cd6;
+  --st-interview: #d08700;
+  --st-offer: #16a34a;
+  --st-rejected: #d84545;
+  --st-ghosted: #8f8a80;
+  color-scheme: light;
+}
+
+@mixin dark {
+  --bg: #0d1413;
+  --surface: #141d1c;
+  --surface-2: #1d2928;
+  --text: #e8f0ef;
+  --muted: #9db0ad;
+  --border: #2a3a38;
+  --accent: #2dd4bf;
+  --accent-text: #062522;
+  --accent-soft: #123a36;
+  --good: #4ade80;
+  --warn: #f0b04a;
+  --bad: #ff7b7b;
+  --shadow: none;
+  --st-wishlist: #8d9b9a;
+  --st-applied: #3987e5;
+  --st-screening: #9085e9;
+  --st-interview: #e0a020;
+  --st-offer: #2fbf63;
+  --st-rejected: #e66767;
+  --st-ghosted: #a39e94;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) { @include dark; }
+}
+:root[data-theme='dark'] { @include dark; }
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.55 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 { line-height: 1.25; margin: 0 0 0.5rem; }
+h1 { font-size: 1.55rem; }
+h2 { font-size: 1.15rem; }
+h3 { font-size: 1rem; }
+p { margin: 0 0 1rem; }
+a { color: var(--accent); }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.25rem;
+  min-width: 0;
+}
+
+.muted { color: var(--muted); }
+.small { font-size: 0.85rem; }
+.stack { display: grid; gap: 1rem; min-width: 0; }
+.row { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+.spacer { flex: 1; }
+.grid-2 { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); }
+.page-head {
+  display: flex; align-items: flex-end; gap: 0.75rem; flex-wrap: wrap; margin: 1rem 0;
+  h1, p { margin: 0; }
+}
+
+label { display: grid; gap: 0.35rem; font-weight: 600; font-size: 0.9rem; }
+
+input[type='text'], input[type='password'], input[type='number'], input[type='url'], input[type='email'],
+input[type='date'], input[type='datetime-local'], input[type='search'], select, textarea {
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.55rem 0.7rem;
+  font-weight: 400;
+  min-width: 0;
+}
+textarea { resize: vertical; min-height: 7rem; }
+:is(input, select, textarea):focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font: inherit;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  padding: 0.5rem 0.95rem;
+  border-radius: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  &:hover:not(:disabled) { border-color: var(--accent); }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+  &.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+  &.danger { color: var(--bad); }
+  &.small { padding: 0.25rem 0.6rem; font-size: 0.82rem; border-radius: 8px; }
+  &:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.12rem 0.6rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  &.good { background: color-mix(in srgb, var(--good) 14%, transparent); color: var(--good); }
+  &.bad { background: color-mix(in srgb, var(--bad) 12%, transparent); color: var(--bad); }
+  &.warn { background: color-mix(in srgb, var(--warn) 14%, transparent); color: var(--warn); }
+  &.plain { background: var(--surface-2); color: var(--muted); }
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  &::before { content: ''; width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--dot, var(--muted)); flex: none; }
+}
+@each $s in wishlist, applied, screening, interview, offer, rejected, ghosted {
+  .st-#{$s} { --dot: var(--st-#{$s}); }
+}
+
+.alert {
+  border: 1px solid color-mix(in srgb, var(--bad) 40%, transparent);
+  background: color-mix(in srgb, var(--bad) 10%, transparent);
+  color: var(--bad);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+}
+.note {
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 0.7rem 1rem;
+  font-size: 0.9rem;
+}
+
+.score-good { color: var(--good); }
+.score-ok { color: var(--warn); }
+.score-bad { color: var(--bad); }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.empty { text-align: center; padding: 2rem 1rem; color: var(--muted); }
+
+.spinner {
+  width: 1em; height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation-duration: 2s; }
+}
+
+// Charts: hand-written SVG, recessive grid, text in ink colours.
+.chart {
+  width: 100%;
+  height: auto;
+  display: block;
+  text { fill: var(--muted); font-size: 11px; }
+  .label { fill: var(--text); font-weight: 600; }
+  .grid { stroke: var(--border); stroke-width: 1; }
+  .bar { fill: var(--accent); transition: opacity 0.15s; }
+  .bar-soft { fill: color-mix(in srgb, var(--accent) 30%, var(--surface-2)); }
+  .goal { stroke: var(--text); stroke-width: 1.5; stroke-dasharray: 4 4; fill: none; }
+  .mark:hover .bar, .mark:focus .bar { opacity: 0.75; }
+  .mark:focus { outline: none; }
+  .mark:focus-visible .bar { stroke: var(--text); stroke-width: 2; }
+}
