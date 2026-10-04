@@ -21,8 +21,20 @@ const OPENERS: [RegExp, string][] = [
   [/^made\s+/i, 'Built '],
 ];
 
-const TOOL_TAIL = /\s+(?:with|using)\s+([^.;]+?)(?=\s+for\b|,|\.|$)/i;
+const TOOL_START = /\s+(?:with|using)\s+/i;
+// The tool list ends at " for ...", ", raising ..." style clauses, or the end of the sentence.
+const TOOL_END = /\s+for\b|,\s+\w+ing\b|[.;]\s*$|$/i;
 const FILLER = /^(and|or|a|an|the|,|\s)*$/i;
+
+/** Finds a trailing "with A, B and C" clause: its position, full length and the tool list. */
+function toolTail(text: string): { index: number; length: number; tools: string } | null {
+  const start = text.match(TOOL_START);
+  if (!start || start.index === undefined) return null;
+  const after = text.slice(start.index + start[0].length);
+  const end = after.match(TOOL_END);
+  const tools = after.slice(0, end?.index ?? after.length).trim();
+  return tools ? { index: start.index, length: start[0].length + tools.length, tools } : null;
+}
 
 /**
  * Rephrases a bullet without adding anything: upgrades a weak opener, and moves a
@@ -33,13 +45,13 @@ export function rephraseBullet(bullet: string): string {
   for (const [re, verb] of OPENERS) {
     if (re.test(out)) { out = out.replace(re, verb); break; }
   }
-  const tail = out.match(TOOL_TAIL);
-  if (tail && tail.index! > 25) {
-    const tools = tail[1];
+  const tail = toolTail(out);
+  if (tail && tail.index > 15) {
+    const { tools } = tail;
     let rest = tools;
     for (const occ of [...scanSkills(tools)].reverse()) rest = rest.slice(0, occ.index) + rest.slice(occ.index + occ.length);
     if (scanSkills(tools).length && FILLER.test(rest)) {
-      const body = out.slice(0, tail.index) + out.slice(tail.index! + tail[0].length);
+      const body = out.slice(0, tail.index) + out.slice(tail.index + tail.length);
       out = `Using ${tools}, ${body.charAt(0).toLowerCase()}${body.slice(1)}`;
     }
   }
